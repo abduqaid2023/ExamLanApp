@@ -7,6 +7,7 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
@@ -40,7 +41,7 @@ class StudentClient(private val teacherBaseUrl: String) {
     suspend fun submitAnswers(payload: SubmissionPayload): Result<Unit> {
         return try {
             client.post("$teacherBaseUrl/submit") {
-                contentType(io.ktor.http.ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
                 setBody(payload)
             }
             Result.success(Unit)
