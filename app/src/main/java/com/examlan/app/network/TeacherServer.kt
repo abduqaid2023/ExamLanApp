@@ -2,6 +2,7 @@ package com.examlan.app.network
 
 import com.examlan.app.data.Exam
 import com.examlan.app.data.SubmissionPayload
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
@@ -12,8 +13,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.json.Json
 import java.time.Duration
@@ -29,7 +28,7 @@ class TeacherServer(
     private val onSubmissionReceived: suspend (SubmissionPayload) -> Unit,
     private val getCurrentExam: () -> Exam?
 ) {
-    private var server: EmbeddedServer<*, *>? = null
+    private var server: ApplicationEngine? = null
 
     // حالة الطلاب المتصلين حالياً (لعرضها لحظياً في واجهة الأستاذ)
     val connectedStudents = MutableStateFlow<Set<String>>(emptySet())
@@ -47,7 +46,7 @@ class TeacherServer(
                 get("/exam") {
                     val exam = getCurrentExam()
                     if (exam == null) {
-                        call.respond(io.ktor.http.HttpStatusCode.NotFound, "لا يوجد اختبار نشط حالياً")
+                        call.respond(HttpStatusCode.NotFound, "لا يوجد اختبار نشط حالياً")
                     } else {
                         call.respond(exam)
                     }
@@ -58,7 +57,7 @@ class TeacherServer(
                     val payload = call.receive<SubmissionPayload>()
                     onSubmissionReceived(payload)
                     connectedStudents.value = connectedStudents.value + payload.studentName
-                    call.respond(io.ktor.http.HttpStatusCode.OK, mapOf("status" to "received"))
+                    call.respond(HttpStatusCode.OK, mapOf("status" to "received"))
                 }
 
                 // 3) قناة حالة اتصال لحظية (اختياري لعرض من انضم فعلياً)
