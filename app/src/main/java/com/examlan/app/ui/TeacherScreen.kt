@@ -1,27 +1,26 @@
 package com.examlan.app.ui
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.examlan.app.data.AnswerItem
-import com.examlan.app.data.Question
-import com.examlan.app.data.QuestionType
+import com.examlan.app.data.GradeExporter
 import com.examlan.app.viewmodel.TeacherViewModel
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
 
 @Composable
 fun TeacherScreen() {
     val vm: TeacherViewModel = viewModel()
     val exam by vm.currentExam.collectAsState()
     val submissions by vm.submissionsForCurrentExam.collectAsState()
+    val context = LocalContext.current
 
-    var title by remember { mutableStateOf("") }
     var serverStarted by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
@@ -29,23 +28,12 @@ fun TeacherScreen() {
         Spacer(Modifier.height(12.dp))
 
         if (exam == null) {
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("عنوان الاختبار") },
-                modifier = Modifier.fillMaxWidth()
+            // شاشة إنشاء الاختبار الكاملة (عنوان + مدة + أسئلة ديناميكية بأي لغة)
+            ExamBuilderScreen(
+                onCreateExam = { title, durationMinutes, questions ->
+                    vm.createExam(title, durationMinutes, questions)
+                }
             )
-            Spacer(Modifier.height(8.dp))
-            Button(onClick = {
-                // مثال بسيط: سؤالان (اختيار من متعدد + مقالي) - وسّعها حسب الحاجة
-                val questions = listOf(
-                    Question(id = "q1", text = "ما ناتج 2 + 2؟", type = QuestionType.MULTIPLE_CHOICE, options = listOf("3", "4", "5")),
-                    Question(id = "q2", text = "اشرح مفهوم الشبكة المحلية LAN", type = QuestionType.ESSAY)
-                )
-                vm.createExam(title.ifBlank { "اختبار بدون عنوان" }, durationMinutes = 30, questions = questions)
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text("إنشاء الاختبار")
-            }
         } else {
             Text("الاختبار الحالي: ${exam!!.title}")
             Spacer(Modifier.height(8.dp))
@@ -67,7 +55,25 @@ fun TeacherScreen() {
             }
 
             Spacer(Modifier.height(16.dp))
-            Text("الإجابات المستلمة (${submissions.size})", style = MaterialTheme.typography.titleMedium)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("الإجابات المستلمة (${submissions.size})", style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = {
+                    val file = GradeExporter.exportGradesToExcel(context, exam!!.title, submissions)
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "مشاركة كشف الدرجات"))
+                }) {
+                    Text("📤 تصدير كشف الدرجات")
+                }
+            }
 
             LazyColumn(Modifier.weight(1f)) {
                 items(submissions) { sub ->
