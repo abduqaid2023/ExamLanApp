@@ -1,11 +1,13 @@
 package com.examlan.app.viewmodel
 
 import android.app.Application
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.examlan.app.data.*
 import com.examlan.app.data.db.AppDatabase
-import com.examlan.app.network.TeacherServer
+import com.examlan.app.network.ExamServerService
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -21,16 +23,14 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
 
     val allExams = db.teacherDao().getAllExams()
 
-    private var server: TeacherServer? = null
+    private val _isServerRunning = MutableStateFlow(false)
+    val isServerRunning: StateFlow<Boolean> = _isServerRunning
 
     val submissionsForCurrentExam: StateFlow<List<SubmissionEntity>> =
         _currentExam.flatMapLatest { exam ->
             if (exam == null) flowOf(emptyList())
             else db.teacherDao().getSubmissionsForExam(exam.id)
         }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyList())
-
-    val connectedStudentNames: StateFlow<Set<String>>
-        get() = server?.connectedStudents ?: MutableStateFlow(emptySet())
 
     /** إنشاء اختبار جديد وحفظه بشكل دائم فوراً */
     fun createExam(title: String, durationMinutes: Int, questions: List<Question>) {
@@ -40,39 +40,26 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
                 ExamEntity(id = exam.id, title = exam.title, examJson = json.encodeToString(Exam.serializer(), exam), createdAtEpochMs = System.currentTimeMillis())
             )
             _currentExam.value = exam
+            // مشاركة الاختبار مع الخدمة الخلفية حتى تقدر تخدمه للطلاب
+            ExamServerState.currentExam.value = exam
         }
     }
 
-    /** تشغيل الخادم المحلي حتى يتمكن الطلاب من الاتصال */
-    fun startServer(port: Int = 8080) {
-        if (server != null) return
-        server = TeacherServer(
-            port = port,
-            getCurrentExam = { _currentExam.value },
-            onSubmissionReceived = { payload -> handleIncomingSubmission(payload) }
-        )
-        server?.start()
+    /** تشغيل الخادم كخدمة Foreground حتى يستمر يعمل حتى لو خرج الأستاذ من التطبيق */
+    fun startServer() {
+        val context = getApplication<Application>()
+        val intent = Intent(context, ExamServerService::class.java)
+        ContextCompat.startForegroundService(context, intent)
+        _isServerRunning.value = true
     }
 
     fun stopServer() {
-        server?.stop()
-        server = null
-    }
-
-    private suspend fun handleIncomingSubmission(payload: SubmissionPayload) {
-        // الحفظ الدائم فور الاستلام - قبل أي شيء آخر
-        db.teacherDao().insertSubmission(
-            SubmissionEntity(
-                examId = payload.examId,
-                studentId = payload.studentId,
-                studentName = payload.studentName,
-                answersJson = json.encodeToString(
-                    kotlinx.serialization.builtins.ListSerializer(AnswerItem.serializer()),
-                    payload.answers
-                ),
-                receivedAtEpochMs = System.currentTimeMillis()
-            )
-        )
+        val context = getApplication<Application>()
+        val intent = Intent(context, ExamServerService::class.java).apply {
+            action = ExamServerService.ACTION_STOP
+        }
+        context.startService(intent)
+        _isServerRunning.value = false
     }
 
     /** وضع الدرجة لطالب معين وحفظها في كشف الدرجات بشكل دائم */
@@ -80,10 +67,5 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             db.teacherDao().gradeSubmission(autoId, grade, feedback)
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        stopServer()
     }
 }
