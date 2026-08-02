@@ -1,6 +1,11 @@
 package com.examlan.app.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.examlan.app.data.GradeExporter
@@ -19,9 +25,31 @@ fun TeacherScreen() {
     val vm: TeacherViewModel = viewModel()
     val exam by vm.currentExam.collectAsState()
     val submissions by vm.submissionsForCurrentExam.collectAsState()
+    val serverRunning by vm.isServerRunning.collectAsState()
     val context = LocalContext.current
 
-    var serverStarted by remember { mutableStateOf(false) }
+    // طلب صلاحية الإشعارات (مطلوبة من أندرويد 13 فأعلى) حتى تظهر إشعار "الخادم يعمل"
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        // حتى لو رفض الإذن، الخادم يستمر يعمل - بس بدون إشعار مرئي واضح
+        vm.startServer()
+    }
+
+    fun requestStartServer() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (hasPermission) {
+                vm.startServer()
+            } else {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            vm.startServer()
+        }
+    }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text("وضع الأستاذ", style = MaterialTheme.typography.headlineSmall)
@@ -38,19 +66,25 @@ fun TeacherScreen() {
             Text("الاختبار الحالي: ${exam!!.title}")
             Spacer(Modifier.height(8.dp))
 
-            if (!serverStarted) {
-                Button(onClick = {
-                    vm.startServer(8080)
-                    serverStarted = true
-                }, modifier = Modifier.fillMaxWidth()) {
+            if (!serverRunning) {
+                Button(onClick = { requestStartServer() }, modifier = Modifier.fillMaxWidth()) {
                     Text("بدء استقبال الطلاب (تشغيل الخادم)")
                 }
+                Text(
+                    "ملاحظة: سيظهر إشعار دائم أثناء عمل الخادم - هذا مقصود حتى يستمر العمل حتى لو خرجت من التطبيق",
+                    style = MaterialTheme.typography.bodySmall
+                )
             } else {
                 Card(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                     Column(Modifier.padding(12.dp)) {
                         Text("الخادم يعمل ✅ - أعطِ الطلاب عنوان IP جهازك والمنفذ 8080")
                         Text("مثال: http://<IP جهازك>:8080")
+                        Text("يمكنك الآن الخروج من التطبيق بأمان - سيستمر الخادم بفضل الإشعار الدائم")
                     }
+                }
+                Spacer(Modifier.height(6.dp))
+                OutlinedButton(onClick = { vm.stopServer() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("إيقاف الخادم")
                 }
             }
 
