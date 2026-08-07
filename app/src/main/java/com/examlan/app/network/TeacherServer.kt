@@ -26,7 +26,7 @@ import java.time.Duration
 class TeacherServer(
     private val port: Int = 8080,
     private val onSubmissionReceived: suspend (SubmissionPayload) -> Unit,
-    private val getCurrentExam: () -> Exam?
+    private val getCurrentExam: suspend () -> Exam?
 ) {
     private var server: ApplicationEngine? = null
 

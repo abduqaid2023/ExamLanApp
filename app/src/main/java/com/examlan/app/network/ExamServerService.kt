@@ -52,7 +52,14 @@ class ExamServerService : Service() {
             val db = AppDatabase.getInstance(applicationContext)
             teacherServer = TeacherServer(
                 port = 8080,
-                getCurrentExam = { ExamServerState.currentExam.value },
+                getCurrentExam = {
+                    // أولاً من الذاكرة المشتركة، وإن كانت فارغة (مثلاً بعد إعادة تشغيل قسرية
+                    // للخدمة) نجيب آخر اختبار محفوظ مباشرة من قاعدة البيانات الدائمة
+                    ExamServerState.currentExam.value
+                        ?: db.teacherDao().getLatestExam()?.let {
+                            json.decodeFromString(com.examlan.app.data.Exam.serializer(), it.examJson)
+                        }
+                },
                 onSubmissionReceived = { payload ->
                     // الحفظ الدائم فور الاستلام مباشرة في قاعدة البيانات
                     db.teacherDao().insertSubmission(
