@@ -80,6 +80,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    // --- تصدير Excel ---
-    implementation("org.apache.poi:poi-ooxml:5.2.5")
+    // --- تصدير كشف الدرجات: يتم بدون مكتبات خارجية (CSV يدوي) لتفادي مشاكل POI على أندرويد
 }
