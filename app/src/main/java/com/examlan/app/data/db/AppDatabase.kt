@@ -17,6 +17,9 @@ interface TeacherDao {
     @Query("SELECT * FROM exams ORDER BY createdAtEpochMs DESC")
     fun getAllExams(): Flow<List<ExamEntity>>
 
+    @Query("SELECT * FROM exams ORDER BY createdAtEpochMs DESC LIMIT 1")
+    suspend fun getLatestExam(): ExamEntity?
+
     @Query("SELECT * FROM exams WHERE id = :examId LIMIT 1")
     suspend fun getExamById(examId: String): ExamEntity?
 
