@@ -99,7 +99,7 @@ fun TeacherScreen() {
                     val file = GradeExporter.exportGradesToExcel(context, exam!!.title, submissions)
                     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        type = "text/csv"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
@@ -107,6 +107,10 @@ fun TeacherScreen() {
                 }) {
                     Text("📤 تصدير كشف الدرجات")
                 }
+            }
+
+            TextButton(onClick = { vm.startNewExam() }) {
+                Text("+ بدء اختبار جديد (الاختبار الحالي يبقى محفوظاً)")
             }
 
             LazyColumn(Modifier.weight(1f)) {
