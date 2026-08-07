@@ -23,6 +23,18 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
 
     val allExams = db.teacherDao().getAllExams()
 
+    init {
+        // استعادة آخر اختبار نشط تلقائياً - حتى لو أعاد أندرويد إنشاء الشاشة بعد الخروج من التطبيق
+        viewModelScope.launch {
+            val latest = db.teacherDao().getLatestExam()
+            if (latest != null) {
+                val restoredExam = json.decodeFromString(Exam.serializer(), latest.examJson)
+                _currentExam.value = restoredExam
+                ExamServerState.currentExam.value = restoredExam
+            }
+        }
+    }
+
     private val _isServerRunning = MutableStateFlow(false)
     val isServerRunning: StateFlow<Boolean> = _isServerRunning
 
@@ -67,5 +79,10 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             db.teacherDao().gradeSubmission(autoId, grade, feedback)
         }
+    }
+
+    /** الرجوع لشاشة إنشاء اختبار جديد (لا يحذف الاختبار القديم ولا إجاباته من قاعدة البيانات) */
+    fun startNewExam() {
+        _currentExam.value = null
     }
 }
