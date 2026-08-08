@@ -17,8 +17,16 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.examlan.app.data.AnswerItem
+import com.examlan.app.data.Exam
 import com.examlan.app.data.GradeExporter
+import com.examlan.app.data.QuestionType
+import com.examlan.app.data.SubmissionEntity
 import com.examlan.app.viewmodel.TeacherViewModel
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+
+private val submissionJson = Json { ignoreUnknownKeys = true }
 
 @Composable
 fun TeacherScreen() {
@@ -115,28 +123,89 @@ fun TeacherScreen() {
 
             LazyColumn(Modifier.weight(1f)) {
                 items(submissions) { sub ->
-                    var gradeInput by remember(sub.autoId) { mutableStateOf(sub.grade?.toString() ?: "") }
-                    Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                        Column(Modifier.padding(12.dp)) {
-                            Text("الطالب: ${sub.studentName} (${sub.studentId})")
-                            Text(if (sub.isGraded) "الدرجة: ${sub.grade}" else "لم يتم التصحيح بعد")
-                            Spacer(Modifier.height(6.dp))
-                            Row {
-                                OutlinedTextField(
-                                    value = gradeInput,
-                                    onValueChange = { gradeInput = it },
-                                    label = { Text("الدرجة") },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Button(onClick = {
-                                    val g = gradeInput.toDoubleOrNull()
-                                    if (g != null) vm.gradeSubmission(sub.autoId, g)
-                                }) { Text("حفظ") }
+                    SubmissionCard(exam = exam!!, submission = sub, onGrade = { g -> vm.gradeSubmission(sub.autoId, g) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubmissionCard(
+    exam: Exam,
+    submission: SubmissionEntity,
+    onGrade: (Double) -> Unit
+) {
+    var expanded by remember(submission.autoId) { mutableStateOf(false) }
+    var gradeInput by remember(submission.autoId) { mutableStateOf(submission.grade?.toString() ?: "") }
+
+    val answers = remember(submission.answersJson) {
+        try {
+            submissionJson.decodeFromString(ListSerializer(AnswerItem.serializer()), submission.answersJson)
+                .associateBy { it.questionId }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+    Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Column(Modifier.padding(12.dp)) {
+            Text("الطالب: ${submission.studentName} (${submission.studentId})")
+            Text(if (submission.isGraded) "الدرجة: ${submission.grade}" else "لم يتم التصحيح بعد")
+
+            Spacer(Modifier.height(6.dp))
+            TextButton(onClick = { expanded = !expanded }) {
+                Text(if (expanded) "▲ إخفاء إجابات الطالب" else "▼ عرض إجابات الطالب")
+            }
+
+            if (expanded) {
+                Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    exam.questions.forEachIndexed { index, q ->
+                        val answer = answers[q.id]
+                        Card(
+                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Column(Modifier.padding(10.dp)) {
+                                Text("س${index + 1}: ${q.text}", style = MaterialTheme.typography.bodyMedium)
+                                Spacer(Modifier.height(4.dp))
+                                when (q.type) {
+                                    QuestionType.MULTIPLE_CHOICE -> {
+                                        val selectedIndex = answer?.selectedOptionIndex
+                                        val selectedText = selectedIndex?.let { q.options.getOrNull(it) }
+                                        Text(
+                                            "إجابة الطالب: ${selectedText ?: "لم يُجب"}",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    QuestionType.ESSAY -> {
+                                        Text(
+                                            "إجابة الطالب: ${answer?.essayText?.ifBlank { "لم يُجب" } ?: "لم يُجب"}",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            }
+
+            Spacer(Modifier.height(6.dp))
+            Row {
+                OutlinedTextField(
+                    value = gradeInput,
+                    onValueChange = { gradeInput = it },
+                    label = { Text("الدرجة") },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(8.dp))
+                Button(onClick = {
+                    val g = gradeInput.toDoubleOrNull()
+                    if (g != null) onGrade(g)
+                }) { Text("حفظ") }
             }
         }
     }
