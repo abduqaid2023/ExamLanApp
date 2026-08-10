@@ -10,16 +10,27 @@ import kotlinx.serialization.Serializable
 enum class QuestionType { MULTIPLE_CHOICE, ESSAY }
 
 /**
+ * مرفق داخل نص السؤال أو أحد الخيارات - إما معادلة رياضية (LaTeX) أو صورة (Base64).
+ * يُشار له داخل النص برمز مثل {{EQ1}} أو {{IMG1}}، ويُستبدل عند العرض.
+ */
+@Serializable
+data class QuestionResource(
+    val type: String, // "eq" أو "img"
+    val value: String  // نص LaTeX أو صورة بصيغة Base64
+)
+
+/**
  * سؤال واحد داخل الاختبار
  */
 @Serializable
 data class Question(
     val id: String,
-    val text: String,
+    val text: String, // قد يحتوي على رموز مثل {{EQ1}} أو {{IMG1}}
     val type: QuestionType,
-    val options: List<String> = emptyList(), // فقط لأسئلة الاختيار من متعدد
+    val options: List<String> = emptyList(), // فقط لأسئلة الاختيار من متعدد - قد تحتوي رموزاً أيضاً
     val correctOptionIndex: Int? = null,      // للتصحيح التلقائي إن رغبت لاحقاً
-    val points: Double = 1.0
+    val points: Double = 1.0,
+    val resources: Map<String, QuestionResource> = emptyMap() // كل المعادلات والصور المستخدمة في هذا السؤال
 )
 
 /**
