@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalLayoutApi::class)
+
 package com.examlan.app.ui
 
 import android.graphics.Bitmap
