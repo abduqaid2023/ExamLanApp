@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -167,17 +168,23 @@ private fun SubmissionCard(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                         ) {
                             Column(Modifier.padding(10.dp)) {
-                                Text("س${index + 1}: ${q.text}", style = MaterialTheme.typography.bodyMedium)
+                                Row {
+                                    Text("س${index + 1}: ", style = MaterialTheme.typography.bodyMedium)
+                                    RichContent(text = q.text, resources = q.resources, fontSize = 15.sp)
+                                }
                                 Spacer(Modifier.height(4.dp))
                                 when (q.type) {
                                     QuestionType.MULTIPLE_CHOICE -> {
                                         val selectedIndex = answer?.selectedOptionIndex
                                         val selectedText = selectedIndex?.let { q.options.getOrNull(it) }
-                                        Text(
-                                            "إجابة الطالب: ${selectedText ?: "لم يُجب"}",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
+                                        if (selectedText != null) {
+                                            Row {
+                                                Text("إجابة الطالب: ", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                                                RichContent(text = selectedText, resources = q.resources, fontSize = 16.sp)
+                                            }
+                                        } else {
+                                            Text("إجابة الطالب: لم يُجب", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                                        }
                                     }
                                     QuestionType.ESSAY -> {
                                         Text(

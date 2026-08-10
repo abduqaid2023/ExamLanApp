@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.examlan.app.data.AnswerItem
 import com.examlan.app.data.QuestionType
@@ -48,21 +49,21 @@ fun StudentScreen() {
                 items(exam!!.questions) { q ->
                     Card(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                         Column(Modifier.padding(12.dp)) {
-                            Text(q.text, style = MaterialTheme.typography.bodyLarge)
+                            RichContent(text = q.text, resources = q.resources, fontSize = 17.sp, bold = true)
                             Spacer(Modifier.height(6.dp))
 
                             when (q.type) {
                                 QuestionType.MULTIPLE_CHOICE -> {
                                     val selected = answers[q.id]?.selectedOptionIndex
                                     q.options.forEachIndexed { index, option ->
-                                        Row {
+                                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                             RadioButton(
                                                 selected = selected == index,
                                                 onClick = {
                                                     vm.updateAnswer(AnswerItem(questionId = q.id, selectedOptionIndex = index))
                                                 }
                                             )
-                                            Text(option, modifier = Modifier.padding(top = 12.dp))
+                                            RichContent(text = option, resources = q.resources, fontSize = 15.sp)
                                         }
                                     }
                                 }
