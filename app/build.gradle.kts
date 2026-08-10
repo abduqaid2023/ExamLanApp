@@ -80,5 +80,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
+    // --- عرض المعادلات الرياضية (LaTeX) بدون إنترنت ---
+    implementation("ru.noties:jlatexmath-android:0.2.0")
+
     // --- تصدير كشف الدرجات: يتم بدون مكتبات خارجية (CSV يدوي) لتفادي مشاكل POI على أندرويد
 }
