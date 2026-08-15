@@ -37,11 +37,13 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
 
     private var studentId: String = ""
     private var studentName: String = ""
+    private var studentClass: String = ""
 
     /** الاتصال بجهاز الأستاذ وجلب الاختبار */
-    fun connectAndFetchExam(teacherIp: String, port: Int, name: String, id: String) {
+    fun connectAndFetchExam(teacherIp: String, port: Int, name: String, id: String, studentClass: String = "") {
         studentName = name
         studentId = id
+        this.studentClass = studentClass
         client = StudentClient("http://$teacherIp:$port")
 
         viewModelScope.launch {
@@ -95,6 +97,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
                 examId = currentExam.id,
                 studentName = studentName,
                 studentId = studentId,
+                studentClass = studentClass,
                 answers = _answers.value.values.toList(),
                 submittedAtEpochMs = System.currentTimeMillis()
             )
