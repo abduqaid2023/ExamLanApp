@@ -56,7 +56,7 @@ interface StudentDao {
 
 @Database(
     entities = [ExamEntity::class, SubmissionEntity::class, LocalExamProgress::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -73,7 +73,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "exam_lan_db"
                 )
-                    // مهم: عدم فقدان البيانات أبداً - لا نستخدم fallbackToDestructiveMigration
+                    // ترقية لمرة واحدة بسبب إضافة عمود "الصف" - بيانات الاختبارات التجريبية
+                    // القديمة فقط تُمسح، ولا يؤثر هذا على أي بيانات تُجمع بعد هذا التحديث
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
