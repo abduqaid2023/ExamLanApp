@@ -67,6 +67,7 @@ class ExamServerService : Service() {
                             examId = payload.examId,
                             studentId = payload.studentId,
                             studentName = payload.studentName,
+                            studentClass = payload.studentClass,
                             answersJson = json.encodeToString(
                                 ListSerializer(AnswerItem.serializer()), payload.answers
                             ),
