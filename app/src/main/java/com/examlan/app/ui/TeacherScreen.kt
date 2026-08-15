@@ -192,6 +192,10 @@ private fun SubmissionCard(
                                             style = MaterialTheme.typography.bodyLarge,
                                             color = MaterialTheme.colorScheme.primary
                                         )
+                                        answer?.essayImageBase64?.let { img ->
+                                            Text("صورة مرفقة:", style = MaterialTheme.typography.labelSmall)
+                                            ImageFromBase64(img)
+                                        }
                                     }
                                 }
                             }
