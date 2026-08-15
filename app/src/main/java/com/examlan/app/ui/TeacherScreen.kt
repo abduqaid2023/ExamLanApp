@@ -67,8 +67,8 @@ fun TeacherScreen() {
         if (exam == null) {
             // شاشة إنشاء الاختبار الكاملة (عنوان + مدة + أسئلة ديناميكية بأي لغة)
             ExamBuilderScreen(
-                onCreateExam = { title, durationMinutes, questions ->
-                    vm.createExam(title, durationMinutes, questions)
+                onCreateExam = { title, durationMinutes, questions, header ->
+                    vm.createExam(title, durationMinutes, questions, header)
                 }
             )
         } else {
@@ -151,7 +151,7 @@ private fun SubmissionCard(
 
     Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Column(Modifier.padding(12.dp)) {
-            Text("الطالب: ${submission.studentName} (${submission.studentId})")
+            Text("الطالب: ${submission.studentName} (${submission.studentId})" + if (submission.studentClass.isNotBlank()) " - الصف: ${submission.studentClass}" else "")
             Text(if (submission.isGraded) "الدرجة: ${submission.grade}" else "لم يتم التصحيح بعد")
 
             Spacer(Modifier.height(6.dp))

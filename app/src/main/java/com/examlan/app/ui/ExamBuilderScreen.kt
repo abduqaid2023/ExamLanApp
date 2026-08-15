@@ -18,6 +18,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.examlan.app.data.ExamHeader
 import com.examlan.app.data.ImageUtils
 import com.examlan.app.data.Question
 import com.examlan.app.data.QuestionResource
@@ -51,12 +52,21 @@ private class DraftQuestion(
 
 @Composable
 fun ExamBuilderScreen(
-    onCreateExam: (title: String, durationMinutes: Int, questions: List<Question>) -> Unit
+    onCreateExam: (title: String, durationMinutes: Int, questions: List<Question>, header: ExamHeader) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var duration by remember { mutableStateOf("30") }
     val draftQuestions = remember { mutableStateListOf<DraftQuestion>() }
     var activeTarget by remember { mutableStateOf<ActiveTarget?>(null) }
+
+    // بيانات الترويسة الرسمية (اختيارية)
+    var headerExpanded by remember { mutableStateOf(false) }
+    var countryName by remember { mutableStateOf("") }
+    var ministryName by remember { mutableStateOf("") }
+    var governorateName by remember { mutableStateOf("") }
+    var schoolName by remember { mutableStateOf("") }
+    var academicYear by remember { mutableStateOf("") }
+    var subjectName by remember { mutableStateOf("") }
 
     var showEquationDialog by remember { mutableStateOf(false) }
     var showImageDialog by remember { mutableStateOf(false) }
@@ -134,6 +144,28 @@ fun ExamBuilderScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        Spacer(Modifier.height(8.dp))
+        TextButton(onClick = { headerExpanded = !headerExpanded }) {
+            Text(if (headerExpanded) "▲ إخفاء بيانات الترويسة الرسمية" else "▼ إضافة بيانات الترويسة الرسمية (اختياري)")
+        }
+        if (headerExpanded) {
+            Card(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    OutlinedTextField(value = countryName, onValueChange = { countryName = it }, label = { Text("اسم البلد") }, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedTextField(value = ministryName, onValueChange = { ministryName = it }, label = { Text("الوزارة") }, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedTextField(value = governorateName, onValueChange = { governorateName = it }, label = { Text("المحافظة") }, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedTextField(value = schoolName, onValueChange = { schoolName = it }, label = { Text("المدرسة") }, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedTextField(value = academicYear, onValueChange = { academicYear = it }, label = { Text("العام الدراسي") }, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(6.dp))
+                    OutlinedTextField(value = subjectName, onValueChange = { subjectName = it }, label = { Text("المادة") }, modifier = Modifier.fillMaxWidth())
+                }
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
         Text("الأسئلة (${draftQuestions.size})", style = MaterialTheme.typography.titleMedium)
 
@@ -196,7 +228,19 @@ fun ExamBuilderScreen(
                         resources = d.resources.toMap()
                     )
                 }
-                onCreateExam(title.trim(), duration.toIntOrNull() ?: 30, finalQuestions)
+                onCreateExam(
+                    title.trim(),
+                    duration.toIntOrNull() ?: 30,
+                    finalQuestions,
+                    ExamHeader(
+                        countryName = countryName.trim(),
+                        ministryName = ministryName.trim(),
+                        governorateName = governorateName.trim(),
+                        schoolName = schoolName.trim(),
+                        academicYear = academicYear.trim(),
+                        subjectName = subjectName.trim()
+                    )
+                )
             },
             enabled = canCreate,
             modifier = Modifier.fillMaxWidth()

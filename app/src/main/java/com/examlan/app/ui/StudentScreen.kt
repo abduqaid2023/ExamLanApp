@@ -2,6 +2,7 @@ package com.examlan.app.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.item
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +14,9 @@ import com.examlan.app.data.AnswerItem
 import com.examlan.app.data.QuestionType
 import com.examlan.app.viewmodel.StudentViewModel
 import com.examlan.app.viewmodel.UploadState
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun StudentScreen() {
@@ -24,6 +28,11 @@ fun StudentScreen() {
     var ip by remember { mutableStateOf("192.168.1.5") }
     var name by remember { mutableStateOf("") }
     var studentId by remember { mutableStateOf("") }
+    var studentClass by remember { mutableStateOf("") }
+
+    val dateText = remember {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text("وضع الطالب", style = MaterialTheme.typography.headlineSmall)
@@ -32,20 +41,29 @@ fun StudentScreen() {
         if (exam == null) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("اسم الطالب") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(8.dp))
+            OutlinedTextField(value = studentClass, onValueChange = { studentClass = it }, label = { Text("الصف") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
             OutlinedTextField(value = studentId, onValueChange = { studentId = it }, label = { Text("الرقم الجامعي/الأكاديمي") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("عنوان IP الخاص بجهاز الأستاذ") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(12.dp))
             Button(
-                onClick = { vm.connectAndFetchExam(teacherIp = ip, port = 8080, name = name, id = studentId) },
+                onClick = { vm.connectAndFetchExam(teacherIp = ip, port = 8080, name = name, id = studentId, studentClass = studentClass) },
                 enabled = name.isNotBlank() && studentId.isNotBlank() && ip.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) { Text("الاتصال وجلب الاختبار") }
         } else {
-            Text(exam!!.title, style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-
             LazyColumn(Modifier.weight(1f)) {
+                item {
+                    ExamHeaderView(
+                        header = exam!!.header,
+                        examTitle = exam!!.title,
+                        studentName = name,
+                        studentClass = studentClass,
+                        dateText = dateText,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
                 items(exam!!.questions) { q ->
                     Card(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                         Column(Modifier.padding(12.dp)) {
