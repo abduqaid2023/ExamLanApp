@@ -65,8 +65,9 @@ data class Exam(
 @Serializable
 data class AnswerItem(
     val questionId: String,
-    val selectedOptionIndex: Int? = null, // لأسئلة الاختيار من متعدد
-    val essayText: String? = null          // للأسئلة المقالية
+    val selectedOptionIndex: Int? = null,   // لأسئلة الاختيار من متعدد
+    val essayText: String? = null,          // للأسئلة المقالية
+    val essayImageBase64: String? = null    // صورة مرفقة اختيارية (مثلاً رسم بخط اليد) للسؤال المقالي
 )
 
 /**
