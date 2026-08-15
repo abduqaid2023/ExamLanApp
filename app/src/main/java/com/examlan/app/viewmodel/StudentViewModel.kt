@@ -35,6 +35,9 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private val _uploadState = MutableStateFlow<UploadState>(UploadState.Idle)
     val uploadState: StateFlow<UploadState> = _uploadState
 
+    private val _wasAutoSubmitted = MutableStateFlow(false)
+    val wasAutoSubmitted: StateFlow<Boolean> = _wasAutoSubmitted
+
     private var studentId: String = ""
     private var studentName: String = ""
     private var studentClass: String = ""
@@ -88,9 +91,13 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** رفع الإجابات النهائية - يمكن إعادة المحاولة عند الفشل دون فقدان أي شيء */
-    fun submitFinalAnswers() {
+    /** رفع الإجابات النهائية - يمكن إعادة المحاولة عند الفشل دون فقدان أي شيء
+     * isAutoSubmit=true تعني إن الرفع صار تلقائياً بسبب خروج الطالب من التطبيق (منع الغش) */
+    fun submitFinalAnswers(isAutoSubmit: Boolean = false) {
         val currentExam = _exam.value ?: return
+        // لا تعيد الرفع لو خلص بنجاح مسبقاً
+        if (_uploadState.value is UploadState.Success) return
+        if (isAutoSubmit) _wasAutoSubmitted.value = true
         _uploadState.value = UploadState.Uploading
         viewModelScope.launch {
             val payload = SubmissionPayload(
