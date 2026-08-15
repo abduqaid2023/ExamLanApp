@@ -34,6 +34,20 @@ data class Question(
 )
 
 /**
+ * بيانات ترويسة الاختبار الرسمية (اسم البلد، الوزارة، المحافظة، المدرسة، العام الدراسي، المادة)
+ * يعبّيها الأستاذ مرة واحدة عند إنشاء الاختبار وتظهر ثابتة للطالب فوق الأسئلة.
+ */
+@Serializable
+data class ExamHeader(
+    val countryName: String = "",
+    val ministryName: String = "",
+    val governorateName: String = "",
+    val schoolName: String = "",
+    val academicYear: String = "",
+    val subjectName: String = ""
+)
+
+/**
  * الاختبار الكامل - يُنشئه الأستاذ ويُرسل نسخة منه للطالب عند الاتصال
  */
 @Serializable
@@ -41,7 +55,8 @@ data class Exam(
     val id: String,
     val title: String,
     val durationMinutes: Int,
-    val questions: List<Question>
+    val questions: List<Question>,
+    val header: ExamHeader = ExamHeader()
 )
 
 /**
@@ -62,6 +77,7 @@ data class SubmissionPayload(
     val examId: String,
     val studentName: String,
     val studentId: String,
+    val studentClass: String = "", // الصف - يظهر في الترويسة عند مراجعة الأستاذ
     val answers: List<AnswerItem>,
     val submittedAtEpochMs: Long
 )
@@ -98,6 +114,7 @@ data class SubmissionEntity(
     val examId: String,
     val studentId: String,
     val studentName: String,
+    val studentClass: String = "",
     val answersJson: String,
     val receivedAtEpochMs: Long,
     val grade: Double? = null,       // الدرجة (تُملأ عند التصحيح)
