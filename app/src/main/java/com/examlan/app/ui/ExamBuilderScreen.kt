@@ -209,12 +209,21 @@ fun ExamBuilderScreen(
                 onClick = { draftQuestions.add(DraftQuestion(initialType = QuestionType.ESSAY)) },
                 modifier = Modifier.weight(1f)
             ) { Text("+ سؤال مقالي") }
+            Spacer(Modifier.width(8.dp))
+            OutlinedButton(
+                onClick = { draftQuestions.add(DraftQuestion(initialType = QuestionType.TRUE_FALSE)) },
+                modifier = Modifier.weight(1f)
+            ) { Text("+ صح أو خطأ") }
         }
 
         Spacer(Modifier.height(12.dp))
 
         val canCreate = title.isNotBlank() && draftQuestions.isNotEmpty() &&
-            draftQuestions.all { it.textValue.text.isNotBlank() && (it.type == QuestionType.ESSAY || it.options.count { o -> o.value.text.isNotBlank() } >= 2) }
+            draftQuestions.all {
+                it.textValue.text.isNotBlank() &&
+                    (it.type == QuestionType.ESSAY || it.type == QuestionType.TRUE_FALSE ||
+                        it.options.count { o -> o.value.text.isNotBlank() } >= 2)
+            }
 
         Button(
             onClick = {
@@ -343,7 +352,13 @@ private fun QuestionEditorCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "السؤال ${index + 1} - ${if (question.type == QuestionType.MULTIPLE_CHOICE) "اختيار من متعدد" else "مقالي"}",
+                    "السؤال ${index + 1} - ${
+                        when (question.type) {
+                            QuestionType.MULTIPLE_CHOICE -> "اختيار من متعدد"
+                            QuestionType.ESSAY -> "مقالي"
+                            QuestionType.TRUE_FALSE -> "صح أو خطأ"
+                        }
+                    }",
                     style = MaterialTheme.typography.titleSmall
                 )
                 IconButton(onClick = onDelete) {

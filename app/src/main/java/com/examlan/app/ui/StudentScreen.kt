@@ -2,7 +2,6 @@ package com.examlan.app.ui
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -144,22 +143,26 @@ fun StudentScreen() {
                                 QuestionType.ESSAY -> {
                                     var text by remember(q.id) { mutableStateOf(answers[q.id]?.essayText ?: "") }
                                     val attachedImage = answers[q.id]?.essayImageBase64
+                                    var pendingCameraUri by remember(q.id) { mutableStateOf<Uri?>(null) }
 
-                                    val imagePicker = rememberLauncherForActivityResult(
-                                        contract = ActivityResultContracts.PickVisualMedia()
-                                    ) { uri: Uri? ->
+                                    val cameraLauncher = rememberLauncherForActivityResult(
+                                        contract = ActivityResultContracts.TakePicture()
+                                    ) { success ->
                                         isPickerLaunching = false
-                                        if (uri != null) {
-                                            scope.launch {
-                                                val base64 = ImageUtils.compressUriToBase64(context, uri)
-                                                if (base64 != null) {
-                                                    vm.updateAnswer(
-                                                        AnswerItem(
-                                                            questionId = q.id,
-                                                            essayText = text,
-                                                            essayImageBase64 = base64
+                                        if (success) {
+                                            val uri = pendingCameraUri
+                                            if (uri != null) {
+                                                scope.launch {
+                                                    val base64 = ImageUtils.compressUriToBase64(context, uri)
+                                                    if (base64 != null) {
+                                                        vm.updateAnswer(
+                                                            AnswerItem(
+                                                                questionId = q.id,
+                                                                essayText = text,
+                                                                essayImageBase64 = base64
+                                                            )
                                                         )
-                                                    )
+                                                    }
                                                 }
                                             }
                                         }
@@ -181,10 +184,12 @@ fun StudentScreen() {
                                             enabled = !locked,
                                             onClick = {
                                                 isPickerLaunching = true
-                                                imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                                val uri = ImageUtils.createCameraCaptureUri(context)
+                                                pendingCameraUri = uri
+                                                cameraLauncher.launch(uri)
                                             }
                                         ) {
-                                            Text("📷 إرفاق صورة (رسم أو غيره)")
+                                            Text("📷 التقاط صورة بالكاميرا")
                                         }
                                         if (attachedImage != null && !locked) {
                                             TextButton(onClick = {
@@ -197,6 +202,27 @@ fun StudentScreen() {
 
                                     if (attachedImage != null) {
                                         ImageFromBase64(attachedImage)
+                                    }
+                                }
+                                QuestionType.TRUE_FALSE -> {
+                                    val selected = answers[q.id]?.selectedOptionIndex
+                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Button(
+                                            enabled = !locked,
+                                            onClick = { vm.updateAnswer(AnswerItem(questionId = q.id, selectedOptionIndex = 0)) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (selected == 0) androidx.compose.ui.graphics.Color(0xFF3F7D58) else MaterialTheme.colorScheme.surfaceVariant,
+                                                contentColor = if (selected == 0) androidx.compose.ui.graphics.Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        ) { Text("✓ صحيح") }
+                                        Button(
+                                            enabled = !locked,
+                                            onClick = { vm.updateAnswer(AnswerItem(questionId = q.id, selectedOptionIndex = 1)) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (selected == 1) androidx.compose.ui.graphics.Color(0xFFA6402F) else MaterialTheme.colorScheme.surfaceVariant,
+                                                contentColor = if (selected == 1) androidx.compose.ui.graphics.Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        ) { Text("× خطأ") }
                                     }
                                 }
                             }

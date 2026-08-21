@@ -197,6 +197,18 @@ private fun SubmissionCard(
                                             ImageFromBase64(img)
                                         }
                                     }
+                                    QuestionType.TRUE_FALSE -> {
+                                        val text = when (answer?.selectedOptionIndex) {
+                                            0 -> "✓ صحيح"
+                                            1 -> "× خطأ"
+                                            else -> "لم يُجب"
+                                        }
+                                        Text(
+                                            "إجابة الطالب: $text",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
                                 }
                             }
                         }
