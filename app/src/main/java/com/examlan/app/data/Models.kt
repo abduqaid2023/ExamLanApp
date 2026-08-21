@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 /**
  * نوع السؤال: اختيار من متعدد أو مقالي
  */
-enum class QuestionType { MULTIPLE_CHOICE, ESSAY }
+enum class QuestionType { MULTIPLE_CHOICE, ESSAY, TRUE_FALSE }
 
 /**
  * مرفق داخل نص السؤال أو أحد الخيارات - إما معادلة رياضية (LaTeX) أو صورة (Base64).
