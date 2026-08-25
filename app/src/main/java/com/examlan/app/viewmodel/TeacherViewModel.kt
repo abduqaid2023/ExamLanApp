@@ -45,8 +45,23 @@ class TeacherViewModel(application: Application) : AndroidViewModel(application)
         }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyList())
 
     /** إنشاء اختبار جديد وحفظه بشكل دائم فوراً */
-    fun createExam(title: String, durationMinutes: Int, questions: List<Question>, header: ExamHeader = ExamHeader()) {
-        val exam = Exam(id = UUID.randomUUID().toString(), title = title, durationMinutes = durationMinutes, questions = questions, header = header)
+    fun createExam(
+        title: String,
+        durationMinutes: Int,
+        questions: List<Question>,
+        header: ExamHeader = ExamHeader(),
+        mode: ExamMode = ExamMode.STANDARD,
+        paperImageBase64: String? = null
+    ) {
+        val exam = Exam(
+            id = UUID.randomUUID().toString(),
+            title = title,
+            durationMinutes = durationMinutes,
+            questions = questions,
+            header = header,
+            mode = mode,
+            paperImageBase64 = paperImageBase64
+        )
         viewModelScope.launch {
             db.teacherDao().insertExam(
                 ExamEntity(id = exam.id, title = exam.title, examJson = json.encodeToString(Exam.serializer(), exam), createdAtEpochMs = System.currentTimeMillis())
