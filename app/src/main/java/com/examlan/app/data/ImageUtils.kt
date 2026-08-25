@@ -24,29 +24,29 @@ object ImageUtils {
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
-    fun compressUriToBase64(context: Context, uri: Uri): String? {
+    fun compressUriToBase64(context: Context, uri: Uri, maxDimension: Int = MAX_DIMENSION): String? {
         return try {
             val input = context.contentResolver.openInputStream(uri) ?: return null
             val original = BitmapFactory.decodeStream(input)
             input.close()
             if (original == null) return null
 
-            val scaled = scaleDown(original)
+            val scaled = scaleDown(original, maxDimension)
             val output = ByteArrayOutputStream()
-            scaled.compress(Bitmap.CompressFormat.JPEG, 70, output)
+            scaled.compress(Bitmap.CompressFormat.JPEG, 75, output)
             Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
         } catch (e: Exception) {
             null
         }
     }
 
-    private fun scaleDown(bitmap: Bitmap): Bitmap {
+    private fun scaleDown(bitmap: Bitmap, maxDimension: Int): Bitmap {
         val width = bitmap.width
         val height = bitmap.height
         val maxSide = maxOf(width, height)
-        if (maxSide <= MAX_DIMENSION) return bitmap
+        if (maxSide <= maxDimension) return bitmap
 
-        val ratio = MAX_DIMENSION.toFloat() / maxSide
+        val ratio = maxDimension.toFloat() / maxSide
         val newWidth = (width * ratio).toInt()
         val newHeight = (height * ratio).toInt()
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)

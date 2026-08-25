@@ -48,6 +48,13 @@ data class ExamHeader(
 )
 
 /**
+ * نوع بناء الاختبار: عادي (أسئلة نصية تفاعلية) أو اختبار مرفوع كصورة
+ * (الأستاذ صمّم الاختبار خارجياً - Word أو خط اليد - ورفعه كصورة، والتطبيق
+ * يوفر بس ورقة إجابة منظمة مطابقة لترقيم فقرات الاختبار)
+ */
+enum class ExamMode { STANDARD, IMAGE_BASED }
+
+/**
  * الاختبار الكامل - يُنشئه الأستاذ ويُرسل نسخة منه للطالب عند الاتصال
  */
 @Serializable
@@ -56,7 +63,9 @@ data class Exam(
     val title: String,
     val durationMinutes: Int,
     val questions: List<Question>,
-    val header: ExamHeader = ExamHeader()
+    val header: ExamHeader = ExamHeader(),
+    val mode: ExamMode = ExamMode.STANDARD,
+    val paperImageBase64: String? = null // صورة ورقة الاختبار الكاملة (تُستخدم فقط عند mode = IMAGE_BASED)
 )
 
 /**
