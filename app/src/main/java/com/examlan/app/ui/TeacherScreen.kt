@@ -65,12 +65,37 @@ fun TeacherScreen() {
         Spacer(Modifier.height(12.dp))
 
         if (exam == null) {
-            // شاشة إنشاء الاختبار الكاملة (عنوان + مدة + أسئلة ديناميكية بأي لغة)
-            ExamBuilderScreen(
-                onCreateExam = { title, durationMinutes, questions, header ->
-                    vm.createExam(title, durationMinutes, questions, header)
+            var creationMode by remember { mutableStateOf<String?>(null) }
+
+            when (creationMode) {
+                null -> {
+                    Text("اختر طريقة إنشاء الاختبار", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(10.dp))
+                    Button(onClick = { creationMode = "standard" }, modifier = Modifier.fillMaxWidth()) {
+                        Text("✎ اختبار تفاعلي (أسئلة نصية أكتبها في التطبيق)")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Button(onClick = { creationMode = "image" }, modifier = Modifier.fillMaxWidth()) {
+                        Text("📷 اختبار من صورة (صممته خارجياً ورفعته كصورة)")
+                    }
                 }
-            )
+                "standard" -> {
+                    TextButton(onClick = { creationMode = null }) { Text("← رجوع") }
+                    ExamBuilderScreen(
+                        onCreateExam = { title, durationMinutes, questions, header ->
+                            vm.createExam(title, durationMinutes, questions, header)
+                        }
+                    )
+                }
+                "image" -> {
+                    TextButton(onClick = { creationMode = null }) { Text("← رجوع") }
+                    ImageBasedExamBuilderScreen(
+                        onCreateExam = { title, durationMinutes, questions, header, mode, paperImage ->
+                            vm.createExam(title, durationMinutes, questions, header, mode, paperImage)
+                        }
+                    )
+                }
+            }
         } else {
             Text("الاختبار الحالي: ${exam!!.title}")
             Spacer(Modifier.height(8.dp))

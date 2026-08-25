@@ -118,7 +118,28 @@ fun StudentScreen() {
                         )
                     }
                 }
-                items(exam!!.questions) { q ->
+                if (exam!!.mode == com.examlan.app.data.ExamMode.IMAGE_BASED) {
+                    exam!!.paperImageBase64?.let { img ->
+                        item {
+                            Text("ورقة الاختبار", style = MaterialTheme.typography.titleMedium)
+                        }
+                        item {
+                            Card(Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+                                Box(Modifier.padding(8.dp)) { ImageFromBase64(img) }
+                            }
+                        }
+                    }
+                    item {
+                        StructuredAnswerSheet(
+                            questions = exam!!.questions,
+                            answers = answers,
+                            locked = locked,
+                            onUpdateAnswer = { vm.updateAnswer(it) },
+                            onPickerLaunchingChange = { isPickerLaunching = it }
+                        )
+                    }
+                } else {
+                    items(exam!!.questions) { q ->
                     Card(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                         Column(Modifier.padding(12.dp)) {
                             RichContent(text = q.text, resources = q.resources, fontSize = 17.sp, bold = true)
@@ -228,6 +249,7 @@ fun StudentScreen() {
                             }
                         }
                     }
+                }
                 }
             }
 
