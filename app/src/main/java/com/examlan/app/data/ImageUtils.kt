@@ -24,7 +24,7 @@ object ImageUtils {
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
-    fun compressUriToBase64(context: Context, uri: Uri, maxDimension: Int = MAX_DIMENSION): String? {
+    fun compressUriToBase64(context: Context, uri: Uri, maxDimension: Int = MAX_DIMENSION, quality: Int = 75): String? {
         return try {
             val input = context.contentResolver.openInputStream(uri) ?: return null
             val original = BitmapFactory.decodeStream(input)
@@ -33,7 +33,7 @@ object ImageUtils {
 
             val scaled = scaleDown(original, maxDimension)
             val output = ByteArrayOutputStream()
-            scaled.compress(Bitmap.CompressFormat.JPEG, 75, output)
+            scaled.compress(Bitmap.CompressFormat.JPEG, quality, output)
             Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP)
         } catch (e: Exception) {
             null
