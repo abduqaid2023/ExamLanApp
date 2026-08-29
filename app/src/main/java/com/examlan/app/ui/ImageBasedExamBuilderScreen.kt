@@ -56,7 +56,7 @@ fun ImageBasedExamBuilderScreen(
             isUploadingImage = true
             scope.launch {
                 // دقة أعلى (1600px) حتى يبقى نص ورقة الاختبار واضحاً للقراءة
-                paperImageBase64 = ImageUtils.compressUriToBase64(context, uri, maxDimension = 1600)
+                paperImageBase64 = ImageUtils.compressUriToBase64(context, uri, maxDimension = 2200, quality = 85)
                 isUploadingImage = false
             }
         }
@@ -124,7 +124,7 @@ fun ImageBasedExamBuilderScreen(
         }
         paperImageBase64?.let { img ->
             Spacer(Modifier.height(8.dp))
-            ImageFromBase64(img)
+            PaperImageDisplay(img)
         }
 
         Spacer(Modifier.height(16.dp))

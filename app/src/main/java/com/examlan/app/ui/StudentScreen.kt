@@ -125,7 +125,7 @@ fun StudentScreen() {
                         }
                         item {
                             Card(Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
-                                Box(Modifier.padding(8.dp)) { ImageFromBase64(img) }
+                                Box(Modifier.padding(8.dp)) { PaperImageDisplay(img) }
                             }
                         }
                     }
