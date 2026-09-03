@@ -69,7 +69,7 @@ fun PaperImageDisplay(base64: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun FullScreenZoomableImage(bitmap: Bitmap, onDismiss: () -> Unit) {
+fun FullScreenZoomableImage(bitmap: Bitmap, onDismiss: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)

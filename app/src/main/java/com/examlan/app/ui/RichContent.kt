@@ -7,11 +7,15 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import android.widget.ImageView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -95,9 +99,10 @@ fun EquationView(latex: String, fontSize: TextUnit = 17.sp) {
     )
 }
 
-/** يعرض صورة مخزّنة كنص Base64 */
+/** يعرض صورة مخزّنة كنص Base64 - يمكن الضغط عليها لتكبيرها بشاشة كاملة */
 @Composable
 fun ImageFromBase64(base64: String) {
+    var showFullScreen by remember { mutableStateOf(false) }
     val bitmap: Bitmap? = remember(base64) {
         try {
             val bytes = Base64.decode(base64, Base64.DEFAULT)
@@ -113,6 +118,10 @@ fun ImageFromBase64(base64: String) {
             modifier = Modifier
                 .heightIn(max = 200.dp)
                 .padding(vertical = 4.dp)
+                .clickable { showFullScreen = true }
         )
+        if (showFullScreen) {
+            FullScreenZoomableImage(bitmap = it, onDismiss = { showFullScreen = false })
+        }
     }
 }
